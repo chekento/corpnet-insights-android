@@ -1,16 +1,18 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/research_service.gd" id="2_research"]
+[ext_resource type="Script" path="res://scripts/company_resolver.gd" id="3_resolver"]
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 2
-background_color = Color(0.0196078, 0.0392157, 0.0784314, 1)
+background_color = Color(0.004, 0.012, 0.035, 1)
 ambient_light_source = 3
-ambient_light_color = Color(0.4, 0.5, 0.7, 1)
-ambient_light_energy = 1.2
+ambient_light_color = Color(0.12, 0.32, 0.58, 1)
+ambient_light_energy = 0.9
 glow_enabled = true
-glow_intensity = 0.12
+glow_intensity = 0.24
+glow_strength = 1.15
 tonemap_mode = 3
 ssao_enabled = true
 ssil_enabled = true
@@ -22,27 +24,39 @@ script = ExtResource("1_main")
 environment = SubResource("Environment_main")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 9, 0)
-light_energy = 2.0
+rotation_degrees = Vector3(-48, -28, 0)
+light_color = Color(0.56, 0.76, 1, 1)
+light_energy = 1.8
 shadow_enabled = true
 
 [node name="FillLight" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
-light_color = Color(0.4, 0.72, 1, 1)
+position = Vector3(0, 4, 1)
+light_color = Color(0.18, 0.78, 1, 1)
+light_energy = 6.0
+omni_range = 28.0
+
+[node name="AccentLight" type="OmniLight3D" parent="."]
+position = Vector3(-7, 0, -5)
+light_color = Color(0.58, 0.2, 1, 1)
 light_energy = 4.0
-omni_range = 30.0
+omni_range = 20.0
 
 [node name="CameraRig" type="Node3D" parent="."]
 
 [node name="Camera3D" type="Camera3D" parent="CameraRig"]
-transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 6.5, 16)
+position = Vector3(0, 0.6, 15)
 current = true
-fov = 55.0
+fov = 48.0
+near = 0.1
+far = 200.0
 
 [node name="GraphRoot" type="Node3D" parent="."]
 
 [node name="ResearchService" type="Node" parent="."]
 script = ExtResource("2_research")
+
+[node name="CompanyResolver" type="Node" parent="."]
+script = ExtResource("3_resolver")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -53,59 +67,111 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="TopBar" type="PanelContainer" parent="CanvasLayer/RootUI"]
 layout_mode = 1
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 1580.0
-offset_bottom = 88.0
+offset_left = 18.0
+offset_top = 16.0
+offset_right = 1582.0
+offset_bottom = 92.0
 
-[node name="TopBarMargin" type="MarginContainer" parent="CanvasLayer/RootUI/TopBar"]
+[node name="TopMargin" type="MarginContainer" parent="CanvasLayer/RootUI/TopBar"]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 10
 
-[node name="TopBarVBox" type="VBoxContainer" parent="CanvasLayer/RootUI/TopBar/TopBarMargin"]
+[node name="TopHBox" type="HBoxContainer" parent="CanvasLayer/RootUI/TopBar/TopMargin"]
 layout_mode = 2
+theme_override_constants/separation = 18
 
-[node name="Title" type="Label" parent="CanvasLayer/RootUI/TopBar/TopBarMargin/TopBarVBox"]
+[node name="BrandVBox" type="VBoxContainer" parent="CanvasLayer/RootUI/TopBar/TopMargin/TopHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="CanvasLayer/RootUI/TopBar/TopMargin/TopHBox/BrandVBox"]
 layout_mode = 2
 text = "CorpNet Insights 3D"
+theme_override_font_sizes/font_size = 26
 
-[node name="Subtitle" type="Label" parent="CanvasLayer/RootUI/TopBar/TopBarMargin/TopBarVBox"]
+[node name="Subtitle" type="Label" parent="CanvasLayer/RootUI/TopBar/TopMargin/TopHBox/BrandVBox"]
 layout_mode = 2
-text = "LIVE PUBLIC-SOURCE INTELLIGENCE · 3D CORPORATE CONSTELLATION · GODOT 4.7"
+text = "LIVE PUBLIC-SOURCE INTELLIGENCE  •  COMPANIES  •  RELATIONSHIPS  •  EVIDENCE"
+theme_override_font_sizes/font_size = 12
 
-[node name="Sidebar" type="PanelContainer" parent="CanvasLayer/RootUI"]
+[node name="LiveStatus" type="Label" parent="CanvasLayer/RootUI/TopBar/TopMargin/TopHBox"]
+layout_mode = 2
+text = "●  Live Research Active"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 15
+
+[node name="LeftPanel" type="PanelContainer" parent="CanvasLayer/RootUI"]
 layout_mode = 1
-offset_left = 20.0
+offset_left = 18.0
 offset_top = 108.0
-offset_right = 480.0
-offset_bottom = 880.0
+offset_right = 390.0
+offset_bottom = 884.0
 
-[node name="SidebarMargin" type="MarginContainer" parent="CanvasLayer/RootUI/Sidebar"]
+[node name="LeftMargin" type="MarginContainer" parent="CanvasLayer/RootUI/LeftPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
 
-[node name="SidebarVBox" type="VBoxContainer" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin"]
+[node name="LeftVBox" type="VBoxContainer" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
-[node name="SearchLabel" type="Label" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox"]
+[node name="CompanyLabel" type="Label" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
 text = "Company / Organisation"
+theme_override_font_sizes/font_size = 16
 
-[node name="SearchInput" type="LineEdit" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox"]
+[node name="SearchHBox" type="HBoxContainer" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
-placeholder_text = "e.g. OpenAI, Siemens, BASF, Tesla"
+theme_override_constants/separation = 8
 
-[node name="ScanDepth" type="OptionButton" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox"]
+[node name="SearchInput" type="LineEdit" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/SearchHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Search a legal company…"
+clear_button_enabled = true
+
+[node name="ResolveButton" type="Button" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/SearchHBox"]
+layout_mode = 2
+text = "Find"
+
+[node name="IdentityStatus" type="Label" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
+layout_mode = 2
+text = "Identity not resolved yet"
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="SelectedCompany" type="PanelContainer" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
+layout_mode = 2
+
+[node name="SelectedMargin" type="MarginContainer" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/SelectedCompany"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 9
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 9
+
+[node name="SelectedText" type="RichTextLabel" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/SelectedCompany/SelectedMargin"]
+custom_minimum_size = Vector2(0, 74)
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+text = "[color=#8099ac]No company selected[/color]"
+
+[node name="ScanLabel" type="Label" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
+layout_mode = 2
+text = "Scan depth"
+
+[node name="ScanDepth" type="OptionButton" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
 item_count = 3
 selected = 1
@@ -116,74 +182,238 @@ popup/item_1/id = 120
 popup/item_2/text = "Exhaustive · 200+ source plan"
 popup/item_2/id = 220
 
-[node name="SearchButton" type="Button" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox"]
+[node name="ResearchButton" type="Button" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
 text = "Start live internet research"
+disabled = true
 
-[node name="StatusLabel" type="Label" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox"]
+[node name="StatusLabel" type="Label" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
-text = "Ready · live public sources enabled"
+text = "Ready"
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 12
 
-[node name="CoverageLabel" type="Label" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox"]
+[node name="CoverageLabel" type="Label" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
-text = "Source catalog loading …"
+text = "218 public sources catalogued"
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 12
 
-[node name="ResultTabs" type="TabContainer" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox"]
+[node name="ResultTabs" type="TabContainer" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox"]
 layout_mode = 2
 size_flags_vertical = 3
-current_tab = 0
 
-[node name="SummaryTab" type="VBoxContainer" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox/ResultTabs"]
+[node name="Summary" type="VBoxContainer" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/ResultTabs"]
 layout_mode = 2
-metadata/_tab_name = "Summary"
 
-[node name="SummaryText" type="RichTextLabel" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox/ResultTabs/SummaryTab"]
+[node name="SummaryText" type="RichTextLabel" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/ResultTabs/Summary"]
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
 scroll_active = true
-text = "[i]No research loaded yet.[/i]"
+text = "[color=#71889c]Select a company to begin.[/color]"
 
-[node name="EntitiesTab" type="VBoxContainer" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox/ResultTabs"]
+[node name="Entities" type="VBoxContainer" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/ResultTabs"]
 layout_mode = 2
-metadata/_tab_name = "Entities"
 
-[node name="EntityList" type="ItemList" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox/ResultTabs/EntitiesTab"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="SourcesTab" type="VBoxContainer" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox/ResultTabs"]
-layout_mode = 2
-metadata/_tab_name = "Evidence"
-
-[node name="SourceList" type="ItemList" parent="CanvasLayer/RootUI/Sidebar/SidebarMargin/SidebarVBox/ResultTabs/SourcesTab"]
+[node name="EntityList" type="ItemList" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/ResultTabs/Entities"]
 layout_mode = 2
 size_flags_vertical = 3
+allow_reselect = true
 
-[node name="DetailsPanel" type="PanelContainer" parent="CanvasLayer/RootUI"]
+[node name="Evidence" type="VBoxContainer" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/ResultTabs"]
+layout_mode = 2
+
+[node name="SourceList" type="ItemList" parent="CanvasLayer/RootUI/LeftPanel/LeftMargin/LeftVBox/ResultTabs/Evidence"]
+layout_mode = 2
+size_flags_vertical = 3
+allow_reselect = true
+
+[node name="RightPanel" type="PanelContainer" parent="CanvasLayer/RootUI"]
 layout_mode = 1
-offset_left = 1170.0
+offset_left = 1210.0
 offset_top = 108.0
-offset_right = 1580.0
-offset_bottom = 880.0
+offset_right = 1582.0
+offset_bottom = 884.0
 
-[node name="DetailsMargin" type="MarginContainer" parent="CanvasLayer/RootUI/DetailsPanel"]
+[node name="RightMargin" type="MarginContainer" parent="CanvasLayer/RootUI/RightPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
 
-[node name="DetailsVBox" type="VBoxContainer" parent="CanvasLayer/RootUI/DetailsPanel/DetailsMargin"]
+[node name="RightVBox" type="VBoxContainer" parent="CanvasLayer/RootUI/RightPanel/RightMargin"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="DetailsTitle" type="Label" parent="CanvasLayer/RootUI/DetailsPanel/DetailsMargin/DetailsVBox"]
+[node name="InspectorTitle" type="Label" parent="CanvasLayer/RootUI/RightPanel/RightMargin/RightVBox"]
 layout_mode = 2
 text = "Evidence Inspector"
+theme_override_font_sizes/font_size = 18
 
-[node name="DetailsText" type="RichTextLabel" parent="CanvasLayer/RootUI/DetailsPanel/DetailsMargin/DetailsVBox"]
+[node name="DetailsText" type="RichTextLabel" parent="CanvasLayer/RootUI/RightPanel/RightMargin/RightVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 bbcode_enabled = true
-text = "[i]Select a company node or entity entry.[/i]"
+scroll_active = true
+text = "[color=#71889c]Select a company node or evidence item.[/color]"
+
+[node name="OpenSourceButton" type="Button" parent="CanvasLayer/RootUI/RightPanel/RightMargin/RightVBox"]
+layout_mode = 2
+text = "Open selected source"
+disabled = true
+
+[node name="GraphLegend" type="PanelContainer" parent="CanvasLayer/RootUI"]
+layout_mode = 1
+offset_left = 410.0
+offset_top = 112.0
+offset_right = 610.0
+offset_bottom = 286.0
+mouse_filter = 1
+
+[node name="LegendMargin" type="MarginContainer" parent="CanvasLayer/RootUI/GraphLegend"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="LegendText" type="RichTextLabel" parent="CanvasLayer/RootUI/GraphLegend/LegendMargin"]
+custom_minimum_size = Vector2(170, 145)
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+text = "[b]NETWORK[/b]\n[color=#bd5cff]●[/color] Parent / Ownership\n[color=#20f0a0]●[/color] Subsidiary\n[color=#32a7ff]●[/color] Partner\n[color=#ffad33]●[/color] Supplier\n[color=#ff4d6d]●[/color] Competitor\n[color=#b9d7ff]●[/color] Related"
+
+[node name="GraphHint" type="PanelContainer" parent="CanvasLayer/RootUI"]
+layout_mode = 1
+offset_left = 640.0
+offset_top = 802.0
+offset_right = 1168.0
+offset_bottom = 884.0
+
+[node name="HintMargin" type="MarginContainer" parent="CanvasLayer/RootUI/GraphHint"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="HintVBox" type="VBoxContainer" parent="CanvasLayer/RootUI/GraphHint/HintMargin"]
+layout_mode = 2
+
+[node name="NavHBox" type="HBoxContainer" parent="CanvasLayer/RootUI/GraphHint/HintMargin/HintVBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="OrbitButton" type="Button" parent="CanvasLayer/RootUI/GraphHint/HintMargin/HintVBox/NavHBox"]
+layout_mode = 2
+text = "Orbit"
+toggle_mode = true
+button_pressed = true
+
+[node name="PanButton" type="Button" parent="CanvasLayer/RootUI/GraphHint/HintMargin/HintVBox/NavHBox"]
+layout_mode = 2
+text = "Pan"
+toggle_mode = true
+
+[node name="ZoomInButton" type="Button" parent="CanvasLayer/RootUI/GraphHint/HintMargin/HintVBox/NavHBox"]
+layout_mode = 2
+text = "Zoom +"
+
+[node name="ZoomOutButton" type="Button" parent="CanvasLayer/RootUI/GraphHint/HintMargin/HintVBox/NavHBox"]
+layout_mode = 2
+text = "Zoom −"
+
+[node name="ResetButton" type="Button" parent="CanvasLayer/RootUI/GraphHint/HintMargin/HintVBox/NavHBox"]
+layout_mode = 2
+text = "Reset"
+
+[node name="Hint" type="Label" parent="CanvasLayer/RootUI/GraphHint/HintMargin/HintVBox"]
+layout_mode = 2
+text = "Drag to orbit · Pan mode to move · Wheel/buttons to zoom · Tap a node for evidence"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 11
+
+[node name="CandidateOverlay" type="Control" parent="CanvasLayer/RootUI"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Dim" type="ColorRect" parent="CanvasLayer/RootUI/CandidateOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0.015, 0.04, 0.72)
+mouse_filter = 0
+
+[node name="Center" type="CenterContainer" parent="CanvasLayer/RootUI/CandidateOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Card" type="PanelContainer" parent="CanvasLayer/RootUI/CandidateOverlay/Center"]
+custom_minimum_size = Vector2(760, 590)
+layout_mode = 2
+
+[node name="CardMargin" type="MarginContainer" parent="CanvasLayer/RootUI/CandidateOverlay/Center/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/RootUI/CandidateOverlay/Center/Card/CardMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CandidateTitle" type="Label" parent="CanvasLayer/RootUI/CandidateOverlay/Center/Card/CardMargin/VBox"]
+layout_mode = 2
+text = "Multiple companies found"
+theme_override_font_sizes/font_size = 24
+
+[node name="CandidateHelp" type="Label" parent="CanvasLayer/RootUI/CandidateOverlay/Center/Card/CardMargin/VBox"]
+layout_mode = 2
+text = "Choose the exact legal entity before research. CorpNet will analyse only the selected company."
+autowrap_mode = 2
+
+[node name="CandidateList" type="ItemList" parent="CanvasLayer/RootUI/CandidateOverlay/Center/Card/CardMargin/VBox"]
+custom_minimum_size = Vector2(0, 380)
+layout_mode = 2
+size_flags_vertical = 3
+select_mode = 0
+allow_reselect = true
+
+[node name="CandidatePreview" type="RichTextLabel" parent="CanvasLayer/RootUI/CandidateOverlay/Center/Card/CardMargin/VBox"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+text = "Select a result to inspect identity evidence."
+
+[node name="Actions" type="HBoxContainer" parent="CanvasLayer/RootUI/CandidateOverlay/Center/Card/CardMargin/VBox"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 10
+
+[node name="CancelCandidate" type="Button" parent="CanvasLayer/RootUI/CandidateOverlay/Center/Card/CardMargin/VBox/Actions"]
+layout_mode = 2
+text = "Cancel"
+
+[node name="UseCandidate" type="Button" parent="CanvasLayer/RootUI/CandidateOverlay/Center/Card/CardMargin/VBox/Actions"]
+layout_mode = 2
+text = "Use selected company"
+disabled = true
