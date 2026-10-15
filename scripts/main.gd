@@ -51,7 +51,7 @@ func _process(delta: float) -> void:
         if child.has_meta("corp_node"):
             var base_scale: float = float(child.get_meta("base_scale", 1.0))
             var phase: float = float(child.get_meta("phase", 0.0))
-            var pulse := 1.0 + sin(t * 1.8 + phase) * 0.035
+            var pulse: float = 1.0 + sin(t * 1.8 + phase) * 0.035
             child.scale = Vector3.ONE * base_scale * pulse
 
 func seed_demo() -> void:
@@ -85,9 +85,9 @@ func _on_search_pressed() -> void:
         status_label.text = "Please enter a company name."
         return
     search_button.disabled = true
-    var depth := scan_depth.get_selected_id()
+    var depth: int = int(scan_depth.get_selected_id())
     status_label.text = "Starting live internet research …"
-    var result := await research_service.research_company(query, depth)
+    var result: Dictionary = await research_service.research_company(query, depth)
     _apply_data(result)
     search_button.disabled = false
     status_label.text = "Research completed · %s" % result.get("completed_at", "")
@@ -129,17 +129,17 @@ func _render_graph(entities: Array, links: Array) -> void:
     var count := max(1, entities.size())
     for i in range(entities.size()):
         var entity: Dictionary = entities[i]
-        var shell := 0 if i == 0 else 1 + int((i - 1) / 8)
-        var local_index := 0 if i == 0 else (i - 1) % 8
-        var shell_count := min(8, max(1, count - 1 - shell * 8))
-        var angle := float(local_index) / float(max(shell_count, 1)) * TAU + float(shell) * 0.42
-        var radius := 0.0 if i == 0 else 4.4 + shell * 3.0
-        var pos := Vector3(cos(angle) * radius, sin(angle * 1.7 + shell) * (1.25 + shell * 0.35), sin(angle) * radius)
+        var shell: int = 0 if i == 0 else 1 + int((i - 1) / 8)
+        var local_index: int = 0 if i == 0 else (i - 1) % 8
+        var shell_count: int = int(min(8, max(1, count - 1 - shell * 8)))
+        var angle: float = float(local_index) / float(max(shell_count, 1)) * TAU + float(shell) * 0.42
+        var radius: float = 0.0 if i == 0 else 4.4 + float(shell) * 3.0
+        var pos: Vector3 = Vector3(cos(angle) * radius, sin(angle * 1.7 + float(shell)) * (1.25 + float(shell) * 0.35), sin(angle) * radius)
         positions[entity.get("id")] = pos
         graph_root.add_child(_make_node(entity, pos, i))
     for link in links:
-        var from_id := link.get("source", "")
-        var to_id := link.get("target", "")
+        var from_id: String = str(link.get("source", ""))
+        var to_id: String = str(link.get("target", ""))
         if positions.has(from_id) and positions.has(to_id):
             graph_root.add_child(_make_connection(
                 positions[from_id],
@@ -155,9 +155,9 @@ func _make_node(entity: Dictionary, pos: Vector3, index: int) -> Node3D:
     root.set_meta("corp_node", true)
     root.set_meta("base_scale", 1.0)
     root.set_meta("phase", float(index) * 0.83)
-    var type := _relation_to_visual_type(str(entity.get("type", "related")))
+    var type: String = _relation_to_visual_type(str(entity.get("type", "related")))
     var color: Color = TYPE_COLORS.get(type, Color.WHITE)
-    var radius := 0.72 if type == "main" else 0.38 + min(0.20, float(entity.get("evidence_count", 1)) * 0.025)
+    var radius: float = 0.72 if type == "main" else 0.38 + min(0.20, float(entity.get("evidence_count", 1)) * 0.025)
 
     var mesh := MeshInstance3D.new()
     var sphere := SphereMesh.new()
@@ -208,8 +208,8 @@ func _make_node(entity: Dictionary, pos: Vector3, index: int) -> Node3D:
 func _make_connection(a: Vector3, b: Vector3, color: Color, confidence: float) -> MeshInstance3D:
     var mesh_instance := MeshInstance3D.new()
     var cylinder := CylinderMesh.new()
-    var length := a.distance_to(b)
-    var thickness := 0.025 + clamp(confidence, 0.0, 1.0) * 0.045
+    var length: float = a.distance_to(b)
+    var thickness: float = 0.025 + clamp(confidence, 0.0, 1.0) * 0.045
     cylinder.top_radius = thickness
     cylinder.bottom_radius = thickness
     cylinder.height = length
