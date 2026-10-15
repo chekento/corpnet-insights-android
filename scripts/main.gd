@@ -126,7 +126,7 @@ func _render_graph(entities: Array, links: Array) -> void:
     for child in graph_root.get_children():
         child.queue_free()
     var positions := {}
-    var count := max(1, entities.size())
+    var count: int = int(max(1, entities.size()))
     for i in range(entities.size()):
         var entity: Dictionary = entities[i]
         var shell: int = 0 if i == 0 else 1 + int((i - 1) / 8)
