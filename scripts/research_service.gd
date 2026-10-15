@@ -19,31 +19,31 @@ func research_company(company_name: String, scan_depth: int = 120) -> Dictionary
     var step := 0
 
     progress.emit(step, total_steps, "Resolving legal identity with GLEIF …")
-    var gleif := await _gleif_lookup(company_name)
+    var gleif: Dictionary = await _gleif_lookup(company_name)
     step += 1
     if not gleif.is_empty():
         findings.append_array(gleif.get("findings", []))
         sources_used.append_array(gleif.get("sources", []))
         jurisdictions.append_array(gleif.get("jurisdictions", []))
 
-    var planned_sources := SourceCatalog.prioritized(jurisdictions, scan_depth)
+    var planned_sources: Array = SourceCatalog.prioritized(jurisdictions, scan_depth)
 
     progress.emit(step, total_steps, "Checking Wikidata entity graph …")
-    var wikidata := await _wikidata_search(company_name)
+    var wikidata: Dictionary = await _wikidata_search(company_name)
     step += 1
     if not wikidata.is_empty():
         findings.append_array(wikidata.get("findings", []))
         sources_used.append_array(wikidata.get("sources", []))
 
     progress.emit(step, total_steps, "Loading encyclopedic context …")
-    var wiki := await _wikipedia_summary(company_name)
+    var wiki: Dictionary = await _wikipedia_summary(company_name)
     step += 1
     if not wiki.is_empty():
         findings.append_array(wiki.get("findings", []))
         sources_used.append_array(wiki.get("sources", []))
 
     progress.emit(step, total_steps, "Checking SEC EDGAR identifiers and filings …")
-    var sec := await _sec_lookup(company_name)
+    var sec: Dictionary = await _sec_lookup(company_name)
     step += 1
     if not sec.is_empty():
         findings.append_array(sec.get("findings", []))
@@ -52,21 +52,21 @@ func research_company(company_name: String, scan_depth: int = 120) -> Dictionary
             jurisdictions.append("US")
 
     progress.emit(step, total_steps, "Scanning public news and web references …")
-    var gdelt := await _gdelt_search(company_name)
+    var gdelt: Dictionary = await _gdelt_search(company_name)
     step += 1
     if not gdelt.is_empty():
         findings.append_array(gdelt.get("findings", []))
         sources_used.append_array(gdelt.get("sources", []))
 
     progress.emit(step, total_steps, "Running broad web discovery …")
-    var web_results := await _duckduckgo_search(company_name)
+    var web_results: Array = await _duckduckgo_search(company_name)
     step += 1
     findings.append_array(_results_to_findings(web_results, "web_discovery"))
     for item in web_results:
         sources_used.append(_source_record("duckduckgo", "DuckDuckGo web discovery", item.get("url", ""), item.get("title", "Web result"), "web"))
 
     progress.emit(step, total_steps, "Verifying high-priority authoritative portals …")
-    var portal_scan := await _targeted_portal_scan(company_name, planned_sources, scan_depth)
+    var portal_scan: Dictionary = await _targeted_portal_scan(company_name, planned_sources, scan_depth)
     step += 1
     findings.append_array(portal_scan.get("findings", []))
     sources_used.append_array(portal_scan.get("sources", []))
@@ -74,7 +74,7 @@ func research_company(company_name: String, scan_depth: int = 120) -> Dictionary
     progress.emit(step, total_steps, "Building evidence-weighted network …")
     step += 1
 
-    var graph := _build_network(company_name, findings)
+    var graph: Dictionary = _build_network(company_name, findings)
     graph["sources"] = _dedupe_sources(sources_used)
     graph["source_plan"] = planned_sources
     graph["catalog_size"] = SourceCatalog.all_sources().size()
@@ -89,7 +89,7 @@ func research_company(company_name: String, scan_depth: int = 120) -> Dictionary
 
 func _gleif_lookup(company_name: String) -> Dictionary:
     var url := "https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=%s&page[size]=10" % company_name.uri_encode()
-    var payload := await _request_json(url)
+    var payload: Dictionary = await _request_json(url)
     if payload.is_empty() or not payload.has("data"):
         return {}
     var findings: Array = []
@@ -132,7 +132,7 @@ func _gleif_lookup(company_name: String) -> Dictionary:
 
 func _wikidata_search(company_name: String) -> Dictionary:
     var url := "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=%s&language=en&limit=8&format=json" % company_name.uri_encode()
-    var payload := await _request_json(url)
+    var payload: Dictionary = await _request_json(url)
     if payload.is_empty():
         return {}
     var findings: Array = []
@@ -148,9 +148,9 @@ func _wikidata_search(company_name: String) -> Dictionary:
     return {"findings": findings, "sources": [_source_record("wikidata", "Wikidata", url, "Wikidata entity search", "api")]}
 
 func _wikipedia_summary(company_name: String) -> Dictionary:
-    var title := company_name.replace(" ", "_").uri_encode()
+    var title: String = company_name.replace(" ", "_").uri_encode()
     var url := "https://en.wikipedia.org/api/rest_v1/page/summary/%s" % title
-    var payload := await _request_json(url)
+    var payload: Dictionary = await _request_json(url)
     if payload.is_empty():
         return {}
     var extract := str(payload.get("extract", ""))
@@ -212,7 +212,7 @@ func _sec_lookup(company_name: String) -> Dictionary:
 
 func _gdelt_search(company_name: String) -> Dictionary:
     var url := "https://api.gdeltproject.org/api/v2/doc/doc?query=%22%s%22&mode=ArtList&maxrecords=12&format=json&sort=HybridRel" % company_name.uri_encode()
-    var payload := await _request_json(url)
+    var payload: Dictionary = await _request_json(url)
     if payload.is_empty():
         return {}
     var findings: Array = []
@@ -234,9 +234,9 @@ func _gdelt_search(company_name: String) -> Dictionary:
     return {"findings": findings, "sources": sources}
 
 func _duckduckgo_search(company_name: String) -> Array:
-    var query := ("%s company parent subsidiaries owners investors acquisitions partnerships competitors suppliers" % company_name).uri_encode()
+    var query: String = ("%s company parent subsidiaries owners investors acquisitions partnerships competitors suppliers" % company_name).uri_encode()
     var url := "https://duckduckgo.com/html/?q=%s" % query
-    var body := await _request_text(url)
+    var body: String = await _request_text(url)
     if body.is_empty():
         return []
     var results: Array = []
@@ -297,7 +297,7 @@ func _duckduckgo_site_search(company_name: String, source: Dictionary) -> Array:
     var domain := str(source.get("domain", ""))
     var query := ("\"%s\" site:%s" % [company_name, domain]).uri_encode()
     var url := "https://duckduckgo.com/html/?q=%s" % query
-    var body := await _request_text(url)
+    var body: String = await _request_text(url)
     if body.is_empty():
         return []
     var regex := RegEx.new()
@@ -328,7 +328,7 @@ func _results_to_findings(results: Array, kind: String) -> Array:
     return out
 
 func _build_network(query_name: String, findings: Array) -> Dictionary:
-    var main_id := _slugify(query_name)
+    var main_id: String = _slugify(query_name)
     var entities: Array = [{
         "id": main_id,
         "name": query_name,
@@ -342,7 +342,7 @@ func _build_network(query_name: String, findings: Array) -> Dictionary:
     var main_context: Array = []
 
     for finding in findings:
-        var name := str(finding.get("entity", "")).strip_edges()
+        var name: String = str(finding.get("entity", "")).strip_edges()
         if name.is_empty():
             continue
         if name.to_lower() == query_name.to_lower() or finding.get("relation") == "summary":
@@ -350,7 +350,7 @@ func _build_network(query_name: String, findings: Array) -> Dictionary:
             entities[0]["evidence_count"] = int(entities[0].get("evidence_count", 0)) + 1
             continue
 
-        var eid := _slugify(name)
+        var eid: String = _slugify(name)
         if not index.has(eid):
             index[eid] = entities.size()
             entities.append({
@@ -372,7 +372,7 @@ func _build_network(query_name: String, findings: Array) -> Dictionary:
                 sids.append(sid)
             entities[idx]["source_ids"] = sids
 
-        var relation := str(finding.get("relation", "related"))
+        var relation: String = str(finding.get("relation", "related"))
         var existing := false
         for link in links:
             if link.get("source") == main_id and link.get("target") == eid and link.get("type") == relation:
