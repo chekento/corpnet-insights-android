@@ -15,7 +15,7 @@ func research_company(company_name: String, scan_depth: int = 120) -> Dictionary
     var findings: Array = []
     var sources_used: Array = []
     var jurisdictions: Array = []
-    var total_steps := 7
+    var total_steps := 8
     var step := 0
 
     progress.emit(step, total_steps, "Resolving legal identity with GLEIF …")
@@ -25,6 +25,8 @@ func research_company(company_name: String, scan_depth: int = 120) -> Dictionary
         findings.append_array(gleif.get("findings", []))
         sources_used.append_array(gleif.get("sources", []))
         jurisdictions.append_array(gleif.get("jurisdictions", []))
+
+    var planned_sources := SourceCatalog.prioritized(jurisdictions, scan_depth)
 
     progress.emit(step, total_steps, "Checking Wikidata entity graph …")
     var wikidata := await _wikidata_search(company_name)
@@ -63,8 +65,13 @@ func research_company(company_name: String, scan_depth: int = 120) -> Dictionary
     for item in web_results:
         sources_used.append(_source_record("duckduckgo", "DuckDuckGo web discovery", item.get("url", ""), item.get("title", "Web result"), "web"))
 
-    progress.emit(step, total_steps, "Building jurisdiction-aware source plan …")
-    var planned_sources := SourceCatalog.prioritized(jurisdictions, scan_depth)
+    progress.emit(step, total_steps, "Verifying high-priority authoritative portals …")
+    var portal_scan := await _targeted_portal_scan(company_name, planned_sources, scan_depth)
+    step += 1
+    findings.append_array(portal_scan.get("findings", []))
+    sources_used.append_array(portal_scan.get("sources", []))
+
+    progress.emit(step, total_steps, "Building evidence-weighted network …")
     step += 1
 
     var graph := _build_network(company_name, findings)
@@ -241,6 +248,67 @@ func _duckduckgo_search(company_name: String) -> Array:
         var title := _strip_tags(_html_unescape(match.get_string(2))).strip_edges()
         if not title.is_empty():
             results.append({"title": title, "url": href, "snippet": "Public web search result"})
+    return results
+
+func _targeted_portal_scan(company_name: String, planned_sources: Array, scan_depth: int) -> Dictionary:
+    var request_cap := 8
+    if scan_depth >= 100:
+        request_cap = 16
+    if scan_depth >= 200:
+        request_cap = 24
+
+    var findings: Array = []
+    var sources: Array = []
+    var checked := 0
+    for source in planned_sources:
+        if checked >= request_cap:
+            break
+        var source_id := str(source.get("id", ""))
+        if source_id in CORE_DIRECT_SOURCE_IDS:
+            continue
+        var domain := str(source.get("domain", ""))
+        if domain.is_empty():
+            continue
+        checked += 1
+        var results := await _duckduckgo_site_search(company_name, source)
+        for item in results:
+            var title := str(item.get("title", ""))
+            var candidate := _extract_org_name(title, company_name)
+            if candidate.is_empty():
+                candidate = company_name
+            findings.append({
+                "entity": candidate,
+                "kind": str(source.get("category", "portal")),
+                "relation": _infer_relation(title),
+                "detail": title,
+                "confidence": min(0.90, 0.45 + float(source.get("priority", 50)) / 250.0),
+                "source_id": source_id
+            })
+            sources.append(_source_record(
+                source_id,
+                str(source.get("name", source_id)),
+                str(item.get("url", "")),
+                title,
+                str(source.get("category", "portal"))
+            ))
+    return {"findings": findings, "sources": sources, "checked": checked}
+
+func _duckduckgo_site_search(company_name: String, source: Dictionary) -> Array:
+    var domain := str(source.get("domain", ""))
+    var query := ("\"%s\" site:%s" % [company_name, domain]).uri_encode()
+    var url := "https://duckduckgo.com/html/?q=%s" % query
+    var body := await _request_text(url)
+    if body.is_empty():
+        return []
+    var regex := RegEx.new()
+    regex.compile('<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>')
+    var results: Array = []
+    var matches := regex.search_all(body)
+    for match in matches.slice(0, min(3, matches.size())):
+        var href := _html_unescape(match.get_string(1))
+        var title := _strip_tags(_html_unescape(match.get_string(2))).strip_edges()
+        if not title.is_empty():
+            results.append({"title": title, "url": href})
     return results
 
 func _results_to_findings(results: Array, kind: String) -> Array:
