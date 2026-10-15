@@ -13,9 +13,8 @@ window/size/viewport_height=900
 window/stretch/mode="canvas_items"
 
 [rendering]
+textures/vram_compression/import_etc2_astc=true
 renderer/rendering_method="forward_plus"
 anti_aliasing/quality/screen_space_aa=1
 textures/canvas_textures/default_texture_filter=0
 lights_and_shadows/use_physical_light_units=true
-
-rendering/textures/vram_compression/import_etc2_astc=true
